@@ -1,77 +1,100 @@
 import numpy as np
 
-def next_state(P, current_state):
+def next_step(P, s):
     """
-    Simulates the next state in a Markov chain.
+    Returnér næste tilstand givet nuværende tilstand s og overgangsmatrix P.
 
-    Parameters:
-    P (np.ndarray): Transition matrix (square).
-    current_state (int): Current state index.
+    Parametre:
+    - P: overgangsmatrix (numpy array)
+    - s: nuværende tilstand (heltal)
 
-    Returns:
-    int: Next state index.
+    Returnerer:
+    - næste tilstand (heltal)
     """
-    return np.random.choice(len(P), p = P[current_state])
+    return np.random.choice(len(P), p=P[s])
 
-def simulate_chain(P, initial_state, steps):
+def simuler(P, start, skridt):
     """
-    Simulates a Markov chain for a given number of steps.
+    Simuler en Markov-kæde.
 
-    Parameters:
-    P (np.ndarray): Transition matrix.
-    initial_state (int): Starting state.
-    steps (int): Number of steps to simulate.
+    Parametre:
+    - P: overgangsmatrix
+    - start: starttilstand (indeks)
+    - skridt: antal skridt i kæden
 
-    Returns:
-    list of int: Sequence of state indices.
+    Returnerer:
+    - liste med tilstande
     """
-    state = initial_state
-    history = [state]
-    for _ in range(steps):
-        state = next_state(P, state)
-        history.append(state)
-    return history
+    hist = [start]
+    for _ in range(skridt):
+        hist.append(next_step(P, hist[-1]))
+    return hist
 
-def stationary_distribution(P, tol=1e-8, max_iter=10000):
+def stationær_fordeling(P):
     """
-    Computes the stationary distribution of a Markov chain.
+    Finder stationær fordeling π som opfylder πP = π og summerer til 1.
 
-    Parameters:
-    P (np.ndarray): Transition matrix.
-    tol (float): Convergence tolerance.
-    max_iter (int): Maximum number of iterations.
-
-    Returns:
-    np.ndarray: Stationary distribution vector.
+    Returnerer:
+    - π: numpy array med sandsynligheder
+    - entydig: bool – om fordelingen er entydig (grænsefordeling eksisterer)
     """
-    n = len(P)
-    dist = np.ones(n) / n  # Start with uniform distribution
-    for _ in range(max_iter):
-        new_dist = dist @ P
-        if np.linalg.norm(new_dist - dist) < tol:
-            return new_dist
-        dist = new_dist
-    raise RuntimeError("Stationary distribution did not converge.")
+    n = P.shape[0]
+    A = np.transpose(P) - np.eye(n)
+    A = np.vstack([A, np.ones(n)])  # π1 + π2 + ... + πn = 1
+    b = np.zeros(n + 1)
+    b[-1] = 1
 
-def print_matrix(P, precision=2):
+    try:
+        pi = np.linalg.lstsq(A, b, rcond=None)[0]
+    except np.linalg.LinAlgError:
+        return None, False
+
+    if np.all(pi >= -1e-10):  # tillad lidt negativt pga. numeriske fejl
+        pi = np.clip(pi, 0, 1)
+        pi /= np.sum(pi)
+        return pi, True
+
+    return None, False
+
+def har_grænsefordeling(P, n=100, tolerance=1e-6):
     """
-    Nicely prints a matrix with rounded values.
+    Undersøger om Markovkæden har en entydig grænsefordeling.
 
-    Parameters:
-    P (np.ndarray): Matrix to print.
-    precision (int): Decimal places to round to.
+    Parametre:
+    - P: overgangsmatrix
+    - n: antal iterationer (hvor langt vi går frem i tiden)
+    - tolerance: hvor ens rækkerne i P^n skal være
+
+    Returnerer:
+    - True hvis alle rækker i P^n er næsten ens
+    - False ellers
     """
-    print(np.array2string(P, precision=precision, floatmode='fixed'))
+    Pn = np.linalg.matrix_power(P, n)
+    første_række = Pn[0]
+    for i in range(1, Pn.shape[0]):
+        if not np.allclose(Pn[i], første_række, atol=tolerance):
+            return False
+    return True
 
-def matrix_power(P, n):
+def udskriv(P, decimaler=2):
     """
-    Computes the nth power of the transition matrix.
+    Udskriv en matrix pænt afrundet.
 
-    Parameters:
-    P (np.ndarray): Transition matrix.
-    n (int): Power to raise the matrix to.
+    Parametre:
+    - P: matrix (numpy array)
+    - decimaler: antal decimaler
+    """
+    print(np.array2string(P, precision=decimaler, floatmode='fixed'))
 
-    Returns:
-    np.ndarray: P^n
+def potens(P, n):
+    """
+    Udregn P^n – overgangsmatrix efter n skridt.
+
+    Parametre:
+    - P: overgangsmatrix
+    - n: antal skridt
+
+    Returnerer:
+    - numpy array med P^n
     """
     return np.linalg.matrix_power(P, n)

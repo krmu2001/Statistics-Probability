@@ -1,29 +1,54 @@
 import numpy as np
-from Markov import simulate_chain, stationary_distribution, print_matrix, matrix_power
+from Markov import udskriv, simuler, stationær_fordeling, potens, har_grænsefordeling
+
 
 def main():
     P = np.array([
-        [0, 0.5, 0.5],
-        [0.1, 0, 0.9],
-        [0.8, 0.2, 0],
+        [0, 1, 0],
+        [0, 0, 1],
+        [1, 0, 0]
     ])
 
-    print("Transition Matrix (P):")
-    print_matrix(P)
+    print("\nOvergangsmatrix:")
+    udskriv(P)
 
-    print("\nP^2 (Transition Probabilities After 2 Steps):")
-    print_matrix(matrix_power(P, 2))
+    print("\nSimuleret kæde (start i tilstand 0):")
+    kæde = simuler(P, start=0, skridt=10)
+    print(kæde)
 
-    print("\nP^5 (Transition Probabilities After 5 Steps):")
-    print_matrix(matrix_power(P, 5))
+    print("\nP^5 – sandsynligheder efter 5 skridt:")
+    udskriv(potens(P, 5))
 
-    chain = simulate_chain(P, initial_state=0, steps=10)
-    print("\nSimulated Markov Chain:")
-    print(chain)
+    print("\nStationær fordeling:")
+    pi, entydig = stationær_fordeling(P)
+    if pi is not None:
+        print("π =", pi)
+        print("Grænsefordeling er entydig." if entydig else "Grænsefordeling er ikke entydig.")
+    else:
+        print("Ingen stationær fordeling fundet.")
 
-    stationary = stationary_distribution(P)
-    print("\nStationary Distribution:")
-    print(stationary)
+    print("Eksempel 1: Periodisk kæde (ingen entydig grænsefordeling)")
+    P1 = np.array([
+        [0, 1, 0],
+        [0, 0, 1],
+        [1, 0, 0]
+    ])
+    udskriv(P1)
+    pi1, entydig1 = stationær_fordeling(P1)
+    print("Stationær fordeling:", pi1)
+    print("Entydig?", entydig1)
+    print("Har grænsefordeling?", har_grænsefordeling(P1))
+
+    print("\nEksempel 2: Aperiodisk kæde (har entydig grænsefordeling)")
+    P2 = np.array([
+        [0.5, 0.5],
+        [0.5, 0.5]
+    ])
+    udskriv(P2)
+    pi2, entydig2 = stationær_fordeling(P2)
+    print("Stationær fordeling:", pi2)
+    print("Entydig?", entydig2)
+    print("Har grænsefordeling?", har_grænsefordeling(P2))
 
 if __name__ == "__main__":
     main()
