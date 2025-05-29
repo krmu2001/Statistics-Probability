@@ -9,9 +9,9 @@ from Markov import (
 def main():
     print("EKSEMPEL: Markov-kæde med 3 tilstande (periodisk)\n")
     P = np.array([
-        [0, 1, 0],
-        [0, 0, 1],
-        [1, 0, 0]
+        [0.5, 0.5, 0],
+        [0.2, 0.5, 0.3],
+        [0, 0, 1]
     ])
     udskriv(P)
 
@@ -51,11 +51,10 @@ def main():
     print("Transiente:", trans)
 
     print("\nAbsorptionssandsynligheder (kun hvis relevant):")
-    # Kun relevant hvis kæden har absorberende tilstande – her er et eksempel:
     P_abs = np.array([
         [0.5, 0.5, 0.0],
         [0.2, 0.3, 0.5],
-        [0.0, 0.0, 1.0]  # absorberende tilstand
+        [0.0, 0.0, 1.0]
     ])
     print("Ny kæde:")
     udskriv(P_abs)
